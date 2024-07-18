@@ -6,7 +6,7 @@ from torchvision.ops import nms
 from visualDet3D.networks.utils.registry import DETECTOR_DICT
 from visualDet3D.utils.timer import profile
 from visualDet3D.networks.heads import losses
-from visualDet3D.networks.detectors.yolostereo3d_core import YoloStereo3DCore
+from visualDet3D.networks.detectors.yolostereo3d_core import YoloStereo3DCore, YoloStereo3DCoreGWC
 from visualDet3D.networks.heads.detection_3d_head import StereoHead
 from visualDet3D.networks.lib.blocks import AnchorFlatten, ConvBnReLU
 from visualDet3D.networks.backbones.resnet import BasicBlock
@@ -101,3 +101,12 @@ class Stereo3D(nn.Module):
             return self.train_forward(*inputs)
         else:
             return self.test_forward(*inputs)
+
+
+@DETECTOR_DICT.register_module
+class Stereo3DGWC(Stereo3D):
+    """
+        Stereo3D
+    """
+    def build_core(self, network_cfg):
+        self.core = YoloStereo3DCoreGWC(network_cfg.backbone)

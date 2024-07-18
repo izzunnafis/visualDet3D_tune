@@ -6,7 +6,7 @@ import math
 import time
 from visualDet3D.networks.lib.blocks import AnchorFlatten, ConvBnReLU
 from visualDet3D.networks.lib.ghost_module import ResGhostModule, GhostModule
-from visualDet3D.networks.lib.PSM_cost_volume import PSMCosineModule, CostVolume
+from visualDet3D.networks.lib.PSM_cost_volume import PSMCosineModule, CostVolume, GWCVolume
 from visualDet3D.networks.backbones import resnet
 from visualDet3D.networks.backbones.resnet import BasicBlock
 
@@ -92,6 +92,21 @@ class StereoMerging(nn.Module):
         features = torch.cat([left_x[2], PSV_features], dim=1) # c = 1152 + 256 = 1408
         return features, depth_output
 
+class StereoMergingGWC(StereoMerging):
+    def __init__(self, base_features):
+        super(StereoMerging, self).__init__()
+        self.cost_volume_0 = GWCVolume(group_num=8, downsample_scale=4, max_disp=48, input_features=base_features, GWC_features=2)
+        PSV_depth_0 = self.cost_volume_0.output_channel
+
+        self.cost_volume_1 = GWCVolume(group_num=8, downsample_scale=8, max_disp=96, input_features=base_features * 2, GWC_features=2)
+        PSV_depth_1 = self.cost_volume_0.output_channel
+
+        self.cost_volume_2 = CostVolume(downsample_scale=16, max_disp=192, input_features=base_features * 4, PSM_features=8)
+        PSV_depth_2 = self.cost_volume_2.output_channel
+
+        self.depth_reasoning = CostVolumePyramid(PSV_depth_0, PSV_depth_1, PSV_depth_2)
+        self.final_channel = self.depth_reasoning.output_channel_num + base_features * 4
+
 class YoloStereo3DCore(nn.Module):
     """
         Inference Structure of YoloStereo3D
@@ -123,3 +138,17 @@ class YoloStereo3DCore(nn.Module):
 
         output_dict = dict(features=features, depth_output=depth_output)
         return output_dict
+
+
+class YoloStereo3DCoreGWC(YoloStereo3DCore):
+    """
+        Inference Structure of YoloStereo3D
+        Similar to YoloMono3D,
+        Left and Right image are fed into the backbone in batch. So they will affect each other with BatchNorm2d.
+    """
+    def __init__(self, backbone_arguments):
+        super(YoloStereo3DCore, self).__init__()
+        self.backbone =resnet(**backbone_arguments)
+
+        base_features = 256 if backbone_arguments['depth'] > 34 else 64
+        self.neck = StereoMergingGWC(base_features)
