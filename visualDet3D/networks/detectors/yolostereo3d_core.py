@@ -9,7 +9,6 @@ from visualDet3D.networks.lib.ghost_module import ResGhostModule, GhostModule
 from visualDet3D.networks.lib.PSM_cost_volume import PSMCosineModule, CostVolume
 from visualDet3D.networks.backbones import resnet
 from visualDet3D.networks.backbones.resnet import BasicBlock
-from visualDet3D.networks.lib.look_ground import LookGround
 
 class CostVolumePyramid(nn.Module):
     """Some Information about CostVolumePyramid"""

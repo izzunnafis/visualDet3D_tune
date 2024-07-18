@@ -16,7 +16,6 @@ from visualDet3D.networks.utils.utils import ClipBoxes
 from visualDet3D.networks.lib.blocks import AnchorFlatten, ConvBnReLU
 from visualDet3D.networks.backbones.resnet import BasicBlock
 from visualDet3D.networks.lib.ops import ModulatedDeformConvPack
-from visualDet3D.networks.lib.look_ground import LookGround
 
 class AnchorBasedDetection3DHead(nn.Module):
     def __init__(self, num_features_in:int=1024,
