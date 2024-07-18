@@ -1,3 +1,11 @@
+Install the requirement
+build the dcn
+
+precompute data
+./launchers/det_precompute.sh config/$CONFIG_FILE.py train
+
+./launchers/disparity_precompute.sh config/$CONFIG_FILE.py $IsUsingPointCloud(False/True) #False if without pointcloud data
+
 # Visual 3D Detection Package:
 
 This repo aims to provide flexible and reproducible visual 3D detection on KITTI dataset. We expect scripts starting from the current directory, and treat ./visualDet3D as a package that we could modify and test directly instead of a library. Several useful scripts are provided in the main directory for easy usage.
