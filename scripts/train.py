@@ -7,7 +7,6 @@ import numpy as np
 from easydict import EasyDict
 from tqdm import tqdm
 from fire import Fire
-import coloredlogs
 import logging
 import torch
 from torch.utils.data import DataLoader
