@@ -8,7 +8,4 @@ matplotlib
 opencv-python
 numba
 easydict
-tensorflow >= 2.0
-cython
 tqdm
-pyquaternion
