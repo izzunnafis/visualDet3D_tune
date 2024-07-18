@@ -111,6 +111,48 @@ class DoublePSMCosineModule(PSMCosineModule):
         cost_2 = super(DoublePSMCosineModule, self)(left_features, right_features_shifted)
         return torch.cat([cost_1, cost_2], dim=1)
 
+class GWCVolume(nn.Module):
+    def __init__(self, group_num=8, max_disp=192, downsample_scale=4, GWC_features=64, input_features=512):
+        super(GWCVolume, self).__init__()
+        self.group_num = group_num
+        self.max_disp = max_disp
+        self.downsample_scale = downsample_scale
+        self.depth_channel = int(self.max_disp / self.downsample_scale)
+
+        self.conv3d = nn.Sequential(
+            nn.Conv3d(self.group_num, GWC_features, 3, padding=1),
+            nn.BatchNorm3d(GWC_features),
+            nn.ReLU(),
+            nn.Conv3d(GWC_features, GWC_features, 3, padding=1),
+            nn.BatchNorm3d(GWC_features),
+            nn.ReLU(),
+        )
+        self.output_channel = GWC_features * self.depth_channel
+
+    @profile("GWC Cost Volume", 1, 20)
+    def forward(self, left_features, right_features):
+        B, C, W, H = left_features.shape
+        volume = left_features.new_zeros([B, self.group_num, self.depth_channel, W, H])
+        for i in range(self.depth_channel):
+            if i > 0:
+                volume[:, :, i, :, i:] = self._groupwise_correlation(left_features[:, :, :, i:], right_features[:, :, :, :-i],
+                                                           self.group_num)
+            else:
+                volume[:, :, i, :, :] = self._groupwise_correlation(left_features, right_features, self.group_num)
+        
+        volume = volume.contiguous()
+        volume = self.conv3d(volume)
+        volume = volume.reshape(B, -1, W, H).contiguous()
+
+        return volume
+    
+    def _groupwise_correlation(self, left_features, right_features, num_groups):
+        B, C, H, W = left_features.shape
+        assert C % num_groups == 0
+        channels_per_group = C // num_groups
+        cost = (left_features * right_features).view([B, num_groups, channels_per_group, H, W]).mean(dim=2)
+        assert cost.shape == (B, num_groups, H, W)
+        return cost
 
 
 if __name__ == "__main__":
