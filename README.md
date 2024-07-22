@@ -1,6 +1,8 @@
 Install the requirement
 build the dcn
 
+edit the config file
+
 precompute data
 ./launchers/det_precompute.sh config/$CONFIG_FILE.py train
 
