@@ -118,3 +118,5 @@ resnet152*
 workdirs
 
 ckpt/*
+data/Kitti_tracking_data/*
+res/*
