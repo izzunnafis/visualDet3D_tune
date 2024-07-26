@@ -70,7 +70,7 @@ What have been done so far:
 
 ## Demo result
   
-
+https://github.com/izzunnafis/visualDet3D_tune/blob/master/docs/res.mp4
 
 
 ## Further Info and Bug Issues
